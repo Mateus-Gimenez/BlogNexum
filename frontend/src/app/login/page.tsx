@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,8 +18,7 @@ const LoginPage = () => {
 
     try {
       const response = await api.post('/auth/login', { email, senha });
-      // TODO: Salvar o token (em localStorage ou cookies)
-      console.log(response.data.token);
+      login(response.data.token);
       router.push('/');
     } catch (err) {
       setError('E-mail ou senha inválidos.');
