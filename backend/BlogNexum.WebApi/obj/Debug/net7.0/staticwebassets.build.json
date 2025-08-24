@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "igU2KfkqUohcAYKJKGIr7idqrL3SLOp33nX/wrcbuUk=",
+  "Source": "BlogNexum.WebApi",
+  "BasePath": "_content/BlogNexum.WebApi",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
