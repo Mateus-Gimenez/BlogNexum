@@ -1,15 +1,20 @@
 using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BlogNexum.WebApi.Models
 {
-    public class Postagem
+    public class Postagem : BlogCommon
     {
-        public int Id { get; set; }
+        [Required]
+        [StringLength(200)]
         public string Titulo { get; set; }
-        public string Conteudo { get; set; }
-        public DateTime DataCriacao { get; set; }
 
-        public int UsuarioId { get; set; }
-        public Usuario Autor { get; set; }
+        [Required]
+        public string Conteudo { get; set; }
+
+        [ForeignKey("Usuario")]
+        public Guid UsuarioId { get; set; }
+        public virtual Usuario Autor { get; set; }
     }
 }

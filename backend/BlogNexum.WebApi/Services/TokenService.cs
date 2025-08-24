@@ -26,8 +26,8 @@ namespace BlogNexum.WebApi.Services
         {
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.NameId, usuario.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, usuario.Email)
+                new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+                new Claim(ClaimTypes.Email, usuario.Email)
             };
 
             var creds = new SigningCredentials(_key, SecurityAlgorithms.HmacSha512Signature);

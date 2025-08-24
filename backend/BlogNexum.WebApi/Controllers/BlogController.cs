@@ -4,6 +4,8 @@ using BlogNexum.WebApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -12,7 +14,7 @@ namespace BlogNexum.WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // Requer autenticação para todas as rotas neste controlador
+    [Authorize]
     public class BlogController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -22,53 +24,53 @@ namespace BlogNexum.WebApi.Controllers
             _context = context;
         }
 
-        // POST /api/posts
         [HttpPost]
         public async Task<IActionResult> CreatePost(CreatePostDto createPostDto)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
             var post = new Postagem
             {
                 Titulo = createPostDto.Titulo,
                 Conteudo = createPostDto.Conteudo,
-                DataCriacao = DateTime.UtcNow,
                 UsuarioId = userId
             };
 
             _context.Postagens.Add(post);
             await _context.SaveChangesAsync();
 
-            // Retorna o post recém-criado com mais detalhes
+            var author = await _context.Usuarios.FindAsync(userId);
+
             var postDetails = new PostDetailsDto
             {
                 Id = post.Id,
                 Titulo = post.Titulo,
                 Conteudo = post.Conteudo,
-                DataCriacao = post.DataCriacao,
+                DataCriacao = post.DataInclusao,
                 AutorId = post.UsuarioId,
-                AutorNome = User.Identity.Name // Ou buscar o nome no banco se preferir
+                AutorNome = author?.Nome
             };
 
             return CreatedAtAction(nameof(GetPostById), new { id = post.Id }, postDetails);
         }
 
-        // GET /api/posts/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<PostDetailsDto>> GetPostById(int id)
+        [AllowAnonymous]
+        public async Task<ActionResult<PostDetailsDto>> GetPostById(Guid id)
         {
             var post = await _context.Postagens
+                .Where(p => p.Id == id)
                 .Include(p => p.Autor)
                 .Select(p => new PostDetailsDto
                 {
                     Id = p.Id,
                     Titulo = p.Titulo,
                     Conteudo = p.Conteudo,
-                    DataCriacao = p.DataCriacao,
+                    DataCriacao = p.DataInclusao,
                     AutorId = p.UsuarioId,
                     AutorNome = p.Autor.Nome
                 })
-                .FirstOrDefaultAsync(p => p.Id == id);
+                .FirstOrDefaultAsync();
 
             if (post == null)
             {
@@ -78,7 +80,6 @@ namespace BlogNexum.WebApi.Controllers
             return Ok(post);
         }
 
-        // GET: api/Blog
         [HttpGet]
         [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<PostDetailsDto>>> GetAllPosts()
@@ -90,7 +91,7 @@ namespace BlogNexum.WebApi.Controllers
                     Id = p.Id,
                     Titulo = p.Titulo,
                     Conteudo = p.Conteudo,
-                    DataCriacao = p.DataCriacao,
+                    DataCriacao = p.DataInclusao,
                     AutorId = p.UsuarioId,
                     AutorNome = p.Autor.Nome
                 })
@@ -100,9 +101,8 @@ namespace BlogNexum.WebApi.Controllers
             return Ok(posts);
         }
 
-        // PUT: api/Blog/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdatePost(int id, UpdatePostDto updatePostDto)
+        public async Task<IActionResult> UpdatePost(Guid id, UpdatePostDto updatePostDto)
         {
             var post = await _context.Postagens.FindAsync(id);
 
@@ -111,7 +111,7 @@ namespace BlogNexum.WebApi.Controllers
                 return NotFound();
             }
 
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             if (post.UsuarioId != userId)
             {
                 return Forbid();
@@ -119,15 +119,15 @@ namespace BlogNexum.WebApi.Controllers
 
             post.Titulo = updatePostDto.Titulo ?? post.Titulo;
             post.Conteudo = updatePostDto.Conteudo ?? post.Conteudo;
+            post.DataAlteracao = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        // DELETE: api/Blog/{id}
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeletePost(int id)
+        public async Task<IActionResult> DeletePost(Guid id)
         {
             var post = await _context.Postagens.FindAsync(id);
             if (post == null)
@@ -135,7 +135,7 @@ namespace BlogNexum.WebApi.Controllers
                 return NotFound();
             }
 
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             if (post.UsuarioId != userId)
             {
                 return Forbid();

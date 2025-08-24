@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "bb4fq361AJQ9ISiyTtoxR0ksxVRfQj+a6xWWA0812KexpeXuN1FzoFHGu5YjsEcN/kS2t7d8MOPKRrCj1cbnsQ==",
+  "dgSpecHash": "yCC+SkeochYvSGsHMSu8YiXbFgRRe8dPnhqNQd7v7xi0R7PFX3Im4yPjUaU6SsfR8V/B97XF1pyQe6xrZqdoVw==",
   "success": true,
   "projectFilePath": "C:\\Users\\Turana\\Documents\\BlogNexum\\backend\\BlogNexum.WebApi\\BlogNexum.WebApi.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\Turana\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\Turana\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\Turana\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\7.0.20\\microsoft.aspnetcore.authentication.jwtbearer.7.0.20.nupkg.sha512",
     "C:\\Users\\Turana\\.nuget\\packages\\microsoft.aspnetcore.openapi\\7.0.11\\microsoft.aspnetcore.openapi.7.0.11.nupkg.sha512",
