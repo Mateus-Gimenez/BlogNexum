@@ -17,7 +17,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
-        policyBuilder => policyBuilder.WithOrigins("http://localhost:3000")
+        policyBuilder => policyBuilder.WithOrigins("http://localhost:3000", "http://localhost:3001")
                                   .AllowAnyHeader()
                                   .AllowAnyMethod());
 });
@@ -61,7 +61,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 

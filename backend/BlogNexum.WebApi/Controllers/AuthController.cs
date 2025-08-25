@@ -36,7 +36,10 @@ namespace BlogNexum.WebApi.Controllers
             {
                 Nome = registerDto.Nome,
                 Email = registerDto.Email,
-                SenhaHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Senha)
+                SenhaHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Senha),
+                Ativo = true,
+                DataInclusao = DateTime.UtcNow,
+                DataAlteracao = DateTime.UtcNow
             };
 
             _context.Usuarios.Add(usuario);

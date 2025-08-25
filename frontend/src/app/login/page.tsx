@@ -17,7 +17,7 @@ const LoginPage = () => {
     setError('');
 
     try {
-      const response = await api.post('/auth/login', { email, senha });
+      const response = await api.post('/auth/login', { Email: email, Senha: senha });
       login(response.data.token);
       router.push('/');
     } catch (err) {
