@@ -18,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={`${inter.className} bg-gray-100`}>
+      <body className={inter.className}>
         <AuthProvider>
           <Header />
           <main className="container mx-auto p-4">

@@ -4,64 +4,67 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { jwtDecode } from 'jwt-decode';
 import api from '@/services/api';
 
-interface User {
-  sub: string; // ID do usuário
-  nome: string;
-  email: string;
+interface DecodedToken {
+  nameid: string; // ID do usuário
+  name: string;   // Nome do usuário
+  exp: number;
 }
 
 interface AuthContextType {
-  user: User | null;
-  token: string | null;
+  isAuthenticated: boolean;
+  user: { id: string; nome: string } | null;
   login: (token: string) => void;
   logout: () => void;
-  isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<{ id: string; nome: string } | null>(null);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('authToken');
-    if (storedToken) {
+    const token = localStorage.getItem('token');
+    if (token) {
       try {
-        const decodedUser: User = jwtDecode(storedToken);
-        setUser(decodedUser);
-        setToken(storedToken);
-        api.defaults.headers.Authorization = `Bearer ${storedToken}`;
+        const decodedToken: DecodedToken = jwtDecode(token);
+        if (decodedToken.exp * 1000 > Date.now()) {
+          setIsAuthenticated(true);
+          setUser({ id: decodedToken.nameid, nome: decodedToken.name });
+          api.defaults.headers.Authorization = `Bearer ${token}`;
+        } else {
+          logout();
+        }
       } catch (error) {
-        console.error('Falha ao decodificar o token:', error);
+        console.error("Falha ao decodificar token inicial:", error);
         logout();
       }
     }
   }, []);
 
-  const login = (newToken: string) => {
+  const login = (token: string) => {
     try {
-      const decodedUser: User = jwtDecode(newToken);
-      localStorage.setItem('authToken', newToken);
-      api.defaults.headers.Authorization = `Bearer ${newToken}`;
-      setToken(newToken);
-      setUser(decodedUser);
+      const decodedToken: DecodedToken = jwtDecode(token);
+      console.log('Token Decodificado no Login:', decodedToken);
+      localStorage.setItem('token', token);
+      api.defaults.headers.Authorization = `Bearer ${token}`;
+      setIsAuthenticated(true);
+      setUser({ id: decodedToken.nameid, nome: decodedToken.name });
     } catch (error) {
-      console.error('Falha ao decodificar o token no login:', error);
+      console.error("Falha ao processar login:", error);
+      logout(); // Garante que o estado fique limpo se o token for inválido
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('token');
     delete api.defaults.headers.Authorization;
+    setIsAuthenticated(false);
     setUser(null);
-    setToken(null);
   };
 
-  const isAuthenticated = !!token;
-
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -70,7 +73,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
   return context;
 };

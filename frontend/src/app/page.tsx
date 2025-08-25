@@ -4,12 +4,43 @@ import { useEffect, useState } from 'react';
 import api from '@/services/api';
 import { Post } from '@/types/post';
 import { useAuth } from '@/contexts/AuthContext';
+import Link from 'next/link';
+import EditPostModal from '@/components/EditPostModal';
 
 export default function Home() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
+
+  const handleUpdate = async (updatedPost: Post) => {
+    if (!editingPost) return;
+
+    try {
+      await api.put(`/blog/${updatedPost.id}`, {
+        titulo: updatedPost.titulo,
+        conteudo: updatedPost.conteudo,
+      });
+      setPosts(posts.map(p => (p.id === updatedPost.id ? updatedPost : p)));
+      setEditingPost(null); // Fecha o modal
+    } catch (err) {
+      setError('Falha ao atualizar o post.');
+      console.error(err);
+    }
+  };
+
+  const handleDelete = async (postId: string) => {
+    if (window.confirm('Tem certeza que deseja excluir este post?')) {
+      try {
+        await api.delete(`/blog/${postId}`);
+        setPosts(posts.filter(p => p.id !== postId));
+      } catch (err) {
+        setError('Falha ao excluir o post.');
+        console.error(err);
+      }
+    }
+  };
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -39,28 +70,63 @@ export default function Home() {
   }
 
   return (
-    <main className="container mx-auto p-4 mt-10">
-      <h1 className="text-4xl font-bold text-center mb-10 text-black">Últimos Posts</h1>
+    <main className="w-full max-w-2xl mx-auto border-x border-gray-200 min-h-screen">
+      <div className="flex justify-between items-center p-4 border-b border-gray-200">
+        <h1 className="text-4xl font-bold text-black">Últimos Posts</h1>
+        <Link href="/posts/create" className="bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700">
+          Criar Novo Post
+        </Link>
+      </div>
       
       {loading && <p className="text-center text-black">Carregando...</p>}
       {error && <p className="text-center text-red-500">{error}</p>}
 
       {!loading && !error && (
-        <div className="space-y-8">
+        <div className="divide-y divide-gray-200">
           {posts.length > 0 ? (
             posts.map((post) => (
-              <div key={post.id} className="bg-white p-6 rounded-lg shadow-md">
-                <h2 className="text-2xl font-bold text-black mb-2">{post.titulo}</h2>
-                <p className="text-gray-500 text-sm mb-4">
-                  Por {post.autorNome} em {new Date(post.dataCriacao).toLocaleDateString()}
-                </p>
-                <p className="text-gray-700">{post.conteudo.substring(0, 200)}...</p>
+              <div key={post.id} className="p-4 hover:bg-gray-50 transition-colors cursor-pointer">
+                <div className="flex">
+                  <div className="flex-shrink-0 mr-4">
+                    <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
+                      <span className="text-xl font-bold text-gray-600">{post.autorNome?.charAt(0)}</span>
+                    </div>
+                  </div>
+                  <div className="flex-grow">
+                    <div className="flex items-center">
+                      <span className="font-bold text-black">{post.autorNome}</span>
+                      <span className="text-gray-500 ml-2 text-sm">· {new Date(post.dataCriacao).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })}</span>
+                    </div>
+                    <h2 className="text-xl font-semibold text-black mt-1">{post.titulo}</h2>
+                    <p className="text-gray-800 mt-2 whitespace-pre-wrap">{post.conteudo}</p>
+                    {isAuthenticated && user?.id === post.autorId && (
+                    <div className="flex items-center space-x-4 mt-4 text-gray-500">
+                      <button onClick={() => setEditingPost(post)} className="flex items-center space-x-2 hover:text-blue-500 group">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"></path></svg>
+                        <span className="text-sm">Editar</span>
+                      </button>
+                      <button onClick={() => handleDelete(post.id)} className="flex items-center space-x-2 hover:text-red-500 group">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        <span className="text-sm">Excluir</span>
+                      </button>
+                    </div>
+                  )}
+                  </div>
+                </div>
               </div>
             ))
           ) : (
             <p className="text-center text-black">Nenhum post encontrado.</p>
           )}
         </div>
+      )}
+
+      {editingPost && (
+        <EditPostModal
+          post={editingPost}
+          onUpdate={handleUpdate}
+          onClose={() => setEditingPost(null)}
+        />
       )}
     </main>
   );

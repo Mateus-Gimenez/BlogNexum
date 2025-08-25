@@ -16,9 +16,6 @@ const Header = () => {
           {isAuthenticated ? (
             <div className="flex items-center">
               <span className="mr-4">Olá, {user?.nome}</span>
-              <Link href="/posts/create" className="mr-4 hover:text-gray-300">
-                Criar Post
-              </Link>
               <button onClick={logout} className="hover:text-gray-300">
                 Logout
               </button>
