@@ -82,9 +82,21 @@ namespace BlogNexum.WebApi.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public async Task<ActionResult<IEnumerable<PostDetailsDto>>> GetAllPosts()
+        public async Task<ActionResult<IEnumerable<PostDetailsDto>>> GetAllPosts([FromQuery(Name = "meus_posts")] bool meusPosts = false)
         {
-            var posts = await _context.Postagens
+            var query = _context.Postagens.AsQueryable();
+
+            if (meusPosts)
+            {
+                if (!User.Identity.IsAuthenticated)
+                {
+                    return Unauthorized();
+                }
+                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                query = query.Where(p => p.UsuarioId == userId);
+            }
+
+            var posts = await query
                 .Include(p => p.Autor)
                 .Select(p => new PostDetailsDto
                 {

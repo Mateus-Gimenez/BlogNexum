@@ -11,6 +11,7 @@ import ConfirmationModal from '@/components/ConfirmationModal';
 export default function Home() {
   const { isAuthenticated, user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
+  const [filter, setFilter] = useState<'all' | 'mine'>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editingPost, setEditingPost] = useState<Post | null>(null);
@@ -57,7 +58,8 @@ export default function Home() {
     if (isAuthenticated) {
       const fetchPosts = async () => {
         try {
-          const response = await api.get('/blog');
+          const params = filter === 'mine' ? { meus_posts: true } : {};
+          const response = await api.get('/blog', { params });
           setPosts(response.data);
         } catch (err) {
           setError('Falha ao carregar os posts.');
@@ -70,7 +72,7 @@ export default function Home() {
     } else {
       setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, filter]);
 
   if (!isAuthenticated) {
     return (
@@ -84,8 +86,21 @@ export default function Home() {
     <div className="bg-gray-50">
       <main className="w-full max-w-2xl mx-auto border-x border-gray-200 min-h-screen bg-white">
       <div className="flex justify-between items-center p-4 border-b border-gray-200">
-        <h1 className="text-4xl font-bold text-black">Últimos Posts</h1>
-        <Link href="/posts/create" className="bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700">
+        <div className="flex-grow">
+          <div className="flex border-b border-gray-200">
+            <button 
+              onClick={() => setFilter('all')}
+              className={`flex-1 p-3 font-bold text-center transition-colors ${filter === 'all' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:bg-gray-100'}`}>
+              Todos os Posts
+            </button>
+            <button 
+              onClick={() => setFilter('mine')}
+              className={`flex-1 p-3 font-bold text-center transition-colors ${filter === 'mine' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:bg-gray-100'}`}>
+              Meus Posts
+            </button>
+          </div>
+        </div>
+        <Link href="/posts/create" className="ml-4 bg-indigo-600 text-white font-bold py-2 px-4 rounded-full hover:bg-indigo-700">
           Criar Novo Post
         </Link>
       </div>
@@ -109,7 +124,9 @@ export default function Home() {
                       <span className="font-bold text-black">{post.autorNome}</span>
                       <span className="text-gray-500 ml-2 text-sm">· {new Date(post.dataCriacao).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })}</span>
                     </div>
-                    <h2 className="text-xl font-semibold text-black mt-1">{post.titulo}</h2>
+                    <Link href={`/posts/${post.id}`} className="hover:underline">
+                      <h2 className="text-2xl font-bold text-black">{post.titulo}</h2>
+                    </Link>
                     <p className="text-gray-800 mt-2 whitespace-pre-wrap">{post.conteudo}</p>
                     {isAuthenticated && user?.id === post.autorId && (
                     <div className="flex items-center space-x-4 mt-4 text-gray-500">
