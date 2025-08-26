@@ -22,7 +22,11 @@ builder.Services.AddCors(options =>
                                   .AllowAnyMethod());
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
 
 // Configuração da Autenticação com JWT
 builder.Services.AddAuthentication(options =>

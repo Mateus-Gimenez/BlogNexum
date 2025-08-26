@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
+import axios from 'axios';
 
 const RegisterPage = () => {
   const [nome, setNome] = useState('');
@@ -19,7 +20,17 @@ const RegisterPage = () => {
       await api.post('/auth/register', { nome, email, senha });
       router.push('/login');
     } catch (err) {
-      setError('Falha ao registrar. Verifique os dados e tente novamente.');
+      if (axios.isAxiosError(err) && err.response) {
+        if (err.response.status === 409) {
+          setError('E-mail já cadastrado.');
+        } else if (err.response.status === 400 && err.response.data?.errors?.Senha) {
+          setError('A senha deve ter no mínimo 6 caracteres.');
+        } else {
+          setError('Falha ao registrar. Verifique os dados e tente novamente.');
+        }
+      } else {
+        setError('Ocorreu um erro inesperado. Tente novamente.');
+      }
     }
   };
 

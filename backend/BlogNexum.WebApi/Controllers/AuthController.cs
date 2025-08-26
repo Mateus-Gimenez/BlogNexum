@@ -29,7 +29,7 @@ namespace BlogNexum.WebApi.Controllers
         {
             if (await _context.Usuarios.AnyAsync(u => u.Email == registerDto.Email))
             {
-                return BadRequest("E-mail já cadastrado.");
+                return Conflict(new { message = "E-mail já cadastrado." });
             }
 
             var usuario = new Usuario
