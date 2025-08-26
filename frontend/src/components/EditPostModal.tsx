@@ -19,8 +19,8 @@ const EditPostModal = ({ post, onUpdate, onClose }: EditPostModalProps) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white p-8 rounded-lg shadow-2xl w-full max-w-2xl">
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-40 backdrop-blur-sm flex justify-center items-center z-50 transition-opacity duration-300">
+      <div className="bg-white p-8 rounded-lg shadow-2xl w-full max-w-2xl transform transition-all duration-300 scale-95 opacity-0 animate-fade-in-scale">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">Editar Post</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">

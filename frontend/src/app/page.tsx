@@ -6,6 +6,7 @@ import { Post } from '@/types/post';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import EditPostModal from '@/components/EditPostModal';
+import ConfirmationModal from '@/components/ConfirmationModal';
 
 export default function Home() {
   const { isAuthenticated, user } = useAuth();
@@ -13,6 +14,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
   const handleUpdate = async (updatedPost: Post) => {
     if (!editingPost) return;
@@ -30,15 +33,23 @@ export default function Home() {
     }
   };
 
-  const handleDelete = async (postId: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este post?')) {
-      try {
-        await api.delete(`/blog/${postId}`);
-        setPosts(posts.filter(p => p.id !== postId));
-      } catch (err) {
-        setError('Falha ao excluir o post.');
-        console.error(err);
-      }
+  const handleDeleteClick = (postId: string) => {
+    setPostToDelete(postId);
+    setIsConfirmModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!postToDelete) return;
+
+    try {
+      await api.delete(`/blog/${postToDelete}`);
+      setPosts(posts.filter(p => p.id !== postToDelete));
+    } catch (err) {
+      setError('Falha ao excluir o post.');
+      console.error(err);
+    } finally {
+      setIsConfirmModalOpen(false);
+      setPostToDelete(null);
     }
   };
 
@@ -70,7 +81,8 @@ export default function Home() {
   }
 
   return (
-    <main className="w-full max-w-2xl mx-auto border-x border-gray-200 min-h-screen">
+    <div className="bg-gray-50">
+      <main className="w-full max-w-2xl mx-auto border-x border-gray-200 min-h-screen bg-white">
       <div className="flex justify-between items-center p-4 border-b border-gray-200">
         <h1 className="text-4xl font-bold text-black">Últimos Posts</h1>
         <Link href="/posts/create" className="bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700">
@@ -105,7 +117,7 @@ export default function Home() {
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"></path></svg>
                         <span className="text-sm">Editar</span>
                       </button>
-                      <button onClick={() => handleDelete(post.id)} className="flex items-center space-x-2 hover:text-red-500 group">
+                      <button onClick={() => handleDeleteClick(post.id)} className="flex items-center space-x-2 hover:text-red-500 group">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         <span className="text-sm">Excluir</span>
                       </button>
@@ -116,7 +128,7 @@ export default function Home() {
               </div>
             ))
           ) : (
-            <p className="text-center text-black">Nenhum post encontrado.</p>
+            <p className="text-center text-black">Nenhuma postagem encontrado.</p>
           )}
         </div>
       )}
@@ -128,6 +140,15 @@ export default function Home() {
           onClose={() => setEditingPost(null)}
         />
       )}
+
+      <ConfirmationModal
+        isOpen={isConfirmModalOpen}
+        title="Exclusão"
+        message="Tem certeza que deseja excluir essa postagem?"
+        onConfirm={confirmDelete}
+        onCancel={() => setIsConfirmModalOpen(false)}
+      />
     </main>
+  </div>
   );
 }

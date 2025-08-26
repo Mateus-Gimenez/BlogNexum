@@ -40,8 +40,8 @@ const CreatePostPage = () => {
   };
 
   return (
-    <div className="container mx-auto mt-10 p-4">
-      <div className="w-full max-w-2xl mx-auto p-8 space-y-6 bg-white rounded-lg shadow-md">
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-40 backdrop-blur-sm flex justify-center items-center z-50">
+      <div className="w-full max-w-2xl mx-auto p-8 space-y-6 bg-white rounded-lg shadow-md transform transition-all duration-300 scale-95 opacity-0 animate-fade-in-scale">
         <h1 className="text-2xl font-bold text-center text-black">Criar Novo Post</h1>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -73,10 +73,17 @@ const CreatePostPage = () => {
             />
           </div>
           {error && <p className="text-red-500 text-sm">{error}</p>}
-          <div>
+          <div className="flex items-center justify-end space-x-4">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            >
+              Cancelar
+            </button>
             <button
               type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
             >
               Publicar
             </button>

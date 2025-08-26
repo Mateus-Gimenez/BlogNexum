@@ -6,13 +6,14 @@ import api from '@/services/api';
 
 interface DecodedToken {
   nameid: string; // ID do usuário
-  name: string;   // Nome do usuário
+  unique_name: string;   // Nome do usuário
+  email: string;
   exp: number;
 }
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  user: { id: string; nome: string } | null;
+  user: { id: string; nome: string; email: string } | null;
   login: (token: string) => void;
   logout: () => void;
 }
@@ -21,7 +22,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<{ id: string; nome: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; nome: string; email: string } | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -30,7 +31,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const decodedToken: DecodedToken = jwtDecode(token);
         if (decodedToken.exp * 1000 > Date.now()) {
           setIsAuthenticated(true);
-          setUser({ id: decodedToken.nameid, nome: decodedToken.name });
+          setUser({ id: decodedToken.nameid, nome: decodedToken.unique_name, email: decodedToken.email });
           api.defaults.headers.Authorization = `Bearer ${token}`;
         } else {
           logout();
@@ -43,16 +44,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = (token: string) => {
+    localStorage.setItem('token', token);
+    api.defaults.headers.Authorization = `Bearer ${token}`;
     try {
       const decodedToken: DecodedToken = jwtDecode(token);
       console.log('Token Decodificado no Login:', decodedToken);
-      localStorage.setItem('token', token);
-      api.defaults.headers.Authorization = `Bearer ${token}`;
       setIsAuthenticated(true);
-      setUser({ id: decodedToken.nameid, nome: decodedToken.name });
+      setUser({ id: decodedToken.nameid, nome: decodedToken.unique_name, email: decodedToken.email });
     } catch (error) {
-      console.error("Falha ao processar login:", error);
-      logout(); // Garante que o estado fique limpo se o token for inválido
+      console.error("Falha ao decodificar token no login:", error);
+      logout();
     }
   };
 

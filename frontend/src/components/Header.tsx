@@ -2,9 +2,17 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { useState } from 'react';
+import ConfirmationModal from './ConfirmationModal';
 
 const Header = () => {
   const { isAuthenticated, user, logout } = useAuth();
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+  const handleLogoutConfirm = () => {
+    logout();
+    setIsLogoutModalOpen(false);
+  };
 
   return (
     <header className="bg-gray-800 text-white p-4 shadow-md">
@@ -16,7 +24,7 @@ const Header = () => {
           {isAuthenticated ? (
             <div className="flex items-center">
               <span className="mr-4">Olá, {user?.nome}</span>
-              <button onClick={logout} className="hover:text-gray-300">
+              <button onClick={() => setIsLogoutModalOpen(true)} className="hover:text-gray-300">
                 Logout
               </button>
             </div>
@@ -32,6 +40,14 @@ const Header = () => {
           )}
         </nav>
       </div>
+    <ConfirmationModal
+        isOpen={isLogoutModalOpen}
+        title="Confirmar Logout"
+        message="Tem certeza que deseja sair?"
+        onConfirm={handleLogoutConfirm}
+        onCancel={() => setIsLogoutModalOpen(false)}
+        confirmButtonText="Sair"
+      />
     </header>
   );
 };
